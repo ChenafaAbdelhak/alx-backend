@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Get locale from request"""
-from typing import Optional
+""" 5. Mock logging in
+"""
+from typing import Any, Dict, Optional, Union
 from flask import Flask, render_template, request, g
 from flask_babel import Babel
 
@@ -13,34 +14,40 @@ class Config(object):
     BABEL_DEFAULT_TIMEZONE = "UTC"
 
 
-users = {
-    1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
-    2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
-    3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
-    4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
-}
-
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config.from_object(Config)
 
 babel = Babel(app)
+users = {
+    1: {
+        "name": "Balou",
+        "locale": "fr",
+        "timezone": "Europe/Paris"
+    },
+    2: {
+        "name": "Beyonce",
+        "locale": "en",
+        "timezone": "US/Central"
+    },
+    3: {
+        "name": "Spock",
+        "locale": "kg",
+        "timezone": "Vulcan"
+    },
+    4: {
+        "name": "Teletubby",
+        "locale": None,
+        "timezone": "Europe/London"
+    },
+}
 
 
-@babel.localeselector
-def get_locale() -> Optional[str]:
-    """ Gets the best match for supported languages """
-    locale = request.args.get('locale')
-    if locale and locale in app.config['LANGUAGES']:
-        return locale
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
-
-
-def get_user() -> any:
-    """gets the user to log in"""
-    user_id = request.args.get('login_as')
-    if user_id:
-        return users.get(int(user_id))
+def get_user() -> Any:
+    """ Returns a user dictionary or None if the ID cannot be found """
+    login_id = request.args.get('login_as')
+    if login_id:
+        return users.get(int(login_id))
     return None
 
 
@@ -48,6 +55,15 @@ def get_user() -> any:
 def before_request() -> None:
     """ Finds a user if any, and set it as a global on flask.g.user """
     g.user = get_user()
+
+
+@babel.localeselector
+def get_locale() -> Optional[str]:
+    """ Gets the best match for supported languages """
+    query_lang = request.args.get('locale')
+    if query_lang and query_lang in app.config['LANGUAGES']:
+        return query_lang
+    return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
 @app.route('/')
