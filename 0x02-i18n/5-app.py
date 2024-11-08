@@ -31,18 +31,17 @@ babel = Babel(app)
 def get_locale() -> Optional[str]:
     """ Gets the best match for supported languages """
     locale = request.args.get('locale')
-    if locale in app.config['LANGUAGES']:
+    if locale and locale in app.config['LANGUAGES']:
         return locale
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-def get_user():
+def get_user() -> any:
     """gets the user to log in"""
-    try:
-        user_id = int(request.args.get('login_as'))
-        return users.get(user_id)
-    except (TypeError, ValueError):
-        return None
+    user_id = request.args.get('login_as')
+    if user_id:
+        return users.get(int(user_id))
+    return None
 
 
 @app.before_request
